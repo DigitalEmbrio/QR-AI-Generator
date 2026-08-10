@@ -1,0 +1,6 @@
+{
+  "name": "QR AI Generator",
+  "description": "Aesthetic AI-powered QR code generator with artistic styles, custom branding, and real-time canvas rendering.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
