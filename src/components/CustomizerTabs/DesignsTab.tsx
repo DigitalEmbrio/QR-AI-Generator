@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { AIPreset, QRConfig } from "../../types";
 import { PRESET_THEMES } from "../../data/presets";
-import { Sparkles, Dices, Check, Wand2 } from "lucide-react";
+import { Dices, Check, CheckCircle2, Layers } from "lucide-react";
 
 interface DesignsTabProps {
   config: QRConfig;
@@ -9,24 +9,37 @@ interface DesignsTabProps {
   onSurpriseMe: () => void;
 }
 
+type PresetFilter = "all" | "classic" | "business" | "social" | "artistic";
+
 export const DesignsTab: React.FC<DesignsTabProps> = ({
   config,
   onSelectPreset,
   onSurpriseMe,
 }) => {
+  const [activeCategory, setActiveCategory] = useState<PresetFilter>("all");
+
+  const filteredPresets = PRESET_THEMES.filter((p) => {
+    if (activeCategory === "all") return true;
+    if (activeCategory === "classic") return p.category === "classic" || p.id === "classic-iso-standard";
+    if (activeCategory === "business") return p.category === "business" || p.category === "classic" || p.category === "minimal";
+    if (activeCategory === "social") return p.category === "social";
+    if (activeCategory === "artistic") return p.category === "artistic" || p.category === "luxury" || p.category === "cyber" || p.category === "nature" || p.category === "vibrant";
+    return true;
+  });
+
   return (
     <div className="space-y-4">
       {/* Templates Header Bar */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
         <div>
           <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-            <span>Templates & Styles</span>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase">
-              {PRESET_THEMES.length} Presets
+            <span>Model & Template Siap Pakai</span>
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+              {PRESET_THEMES.length} Desain
             </span>
           </h3>
           <p className="text-[11px] text-slate-400">
-            Pick a professionally designed visual theme or randomize for inspiration
+            Pilih model standar universal yang umum dipakai untuk bisnis, kasir, resto, atau media sosial
           </p>
         </div>
 
@@ -34,20 +47,46 @@ export const DesignsTab: React.FC<DesignsTabProps> = ({
         <button
           type="button"
           onClick={onSurpriseMe}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 transition active:scale-95"
+          className="flex items-center self-start sm:self-auto gap-1.5 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition active:scale-95 shrink-0"
         >
-          <Dices className="w-4 h-4 text-purple-200 animate-bounce" />
-          <span>Surprise me</span>
+          <Dices className="w-4 h-4 text-purple-200" />
+          <span>Acak Desain</span>
         </button>
+      </div>
+
+      {/* Category Filter Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        {[
+          { id: "all", label: "Semua Model" },
+          { id: "classic", label: "⭐ Standar Universal (100% Scan)" },
+          { id: "business", label: "Bisnis & Kantor" },
+          { id: "social", label: "Sosial & Chat" },
+          { id: "artistic", label: "Artistik & Kreatif" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveCategory(tab.id as PresetFilter)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              activeCategory === tab.id
+                ? "bg-white text-slate-900 shadow-md scale-100"
+                : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Preset Grid Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {PRESET_THEMES.map((p) => {
+        {filteredPresets.map((p) => {
           const isSelected =
-            config.color.foreground === p.foregroundColor &&
-            config.color.background === p.backgroundColor &&
+            config.color.foreground.toLowerCase() === p.foregroundColor.toLowerCase() &&
+            config.color.background.toLowerCase() === p.backgroundColor.toLowerCase() &&
             config.dotStyle === p.dotStyle;
+
+          const isClassicUniversal = p.id === "classic-iso-standard" || p.category === "classic";
 
           return (
             <button
@@ -104,9 +143,16 @@ export const DesignsTab: React.FC<DesignsTabProps> = ({
                   </div>
                 </div>
 
+                {/* 100% Scan Badge for Classic Universal */}
+                {isClassicUniversal && (
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-emerald-500/90 text-white font-extrabold text-[8px] tracking-tight uppercase shadow">
+                    100% Scan
+                  </div>
+                )}
+
                 {/* Selected Checkmark Badge */}
                 {isSelected && (
-                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-md">
+                  <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-md">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
                 )}
@@ -117,7 +163,7 @@ export const DesignsTab: React.FC<DesignsTabProps> = ({
                 <div className="text-xs font-bold text-slate-100 group-hover:text-indigo-300 transition truncate">
                   {p.name}
                 </div>
-                <div className="text-[10px] text-slate-400 truncate">
+                <div className="text-[10px] text-slate-400 line-clamp-2 leading-tight">
                   {p.tagline}
                 </div>
               </div>

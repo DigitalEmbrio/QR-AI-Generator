@@ -179,7 +179,7 @@ export interface AIPreset {
   id: string;
   name: string;
   tagline: string;
-  category: "artistic" | "luxury" | "cyber" | "nature" | "minimal" | "vibrant";
+  category: "classic" | "business" | "social" | "minimal" | "luxury" | "cyber" | "nature" | "vibrant" | "artistic";
   thumbnailBg: string;
   foregroundColor: string;
   backgroundColor: string;
