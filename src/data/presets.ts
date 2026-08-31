@@ -2,6 +2,24 @@ import { AIPreset } from "../types";
 
 export const PRESET_THEMES: AIPreset[] = [
   {
+    id: "organic-liquid-blob",
+    name: "Organic Liquid Flow",
+    tagline: "Fluid connected metaball blobs with rounded corners & high contrast",
+    category: "minimal",
+    thumbnailBg: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+    foregroundColor: "#263238",
+    backgroundColor: "#ffffff",
+    useGradient: false,
+    dotStyle: "liquid-blob",
+    cornerFrameStyle: "rounded",
+    cornerDotStyle: "dot",
+    eyeFrameColor: "#263238",
+    eyeDotColor: "#263238",
+    samplePrompt: "Modern organic fluid liquid shapes with minimalist clean design and soft lighting",
+    presetIcon: "globe",
+    frameText: "SCAN TO VISIT",
+  },
+  {
     id: "cyberpunk-neon",
     name: "Cyberpunk Neon",
     tagline: "Futuristic glow with cyan & magenta contrast",

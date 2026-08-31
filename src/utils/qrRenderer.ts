@@ -165,6 +165,57 @@ export async function renderQRCodeCanvas({
     ctx.restore();
   }
 
+  // Draw Texture Effect if enabled
+  if (config.effects?.texture) {
+    ctx.save();
+    ctx.fillStyle = config.color.foreground;
+    ctx.globalAlpha = 0.05;
+    const step = 8;
+    for (let tx = qrX; tx < qrX + qrSize; tx += step) {
+      for (let ty = qrY; ty < qrY + qrSize; ty += step) {
+        if ((Math.floor(tx / step) + Math.floor(ty / step)) % 2 === 0) {
+          ctx.beginPath();
+          ctx.arc(tx + step / 2, ty + step / 2, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  // Draw Confetti Effect if enabled
+  if (config.effects?.confetti) {
+    ctx.save();
+    const confettiColors = ["#ec4899", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"];
+    // Deterministic pseudo-random seed based on size
+    for (let i = 0; i < 28; i++) {
+      const angle = (i / 28) * Math.PI * 2;
+      const dist = qrSize * 0.46 + ((i * 17) % 30) - 15;
+      const cx = qrX + qrSize / 2 + Math.cos(angle) * dist;
+      const cy = qrY + qrSize / 2 + Math.sin(angle) * dist;
+      
+      // Keep inside container
+      if (cx >= 8 && cx <= targetSize - 8 && cy >= 8 && cy <= targetSize - 8) {
+        ctx.fillStyle = confettiColors[i % confettiColors.length];
+        ctx.globalAlpha = 0.65;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((i * 45 * Math.PI) / 180);
+        if (i % 3 === 0) {
+          ctx.fillRect(-3, -3, 6, 6);
+        } else if (i % 3 === 1) {
+          ctx.beginPath();
+          ctx.arc(0, 0, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(-4, -1.5, 8, 3);
+        }
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+
   // Helper to check if a module is inside Finder Pattern (top-left, top-right, bottom-left 7x7 areas)
   const isFinderPattern = (r: number, c: number): boolean => {
     if (r < 7 && c < 7) return true; // Top-Left
@@ -204,6 +255,12 @@ export async function renderQRCodeCanvas({
 
   // 3. Draw Data Modules (excluding 7x7 finder patterns & logo area)
   ctx.fillStyle = fgStyle;
+  if (config.effects?.glow) {
+    ctx.shadowColor = typeof fgStyle === "string" ? fgStyle : config.color.foreground;
+    ctx.shadowBlur = Math.max(3, moduleSize * 0.4);
+  } else {
+    ctx.shadowBlur = 0;
+  }
 
   // Calculate logo exclusion box if logo is enabled
   let logoMinRow = -1,
@@ -264,6 +321,10 @@ export async function renderQRCodeCanvas({
         bottom: isModuleDarkAndActive(r + 1, c),
         left: isModuleDarkAndActive(r, c - 1),
         right: isModuleDarkAndActive(r, c + 1),
+        topLeft: isModuleDarkAndActive(r - 1, c - 1),
+        topRight: isModuleDarkAndActive(r - 1, c + 1),
+        bottomLeft: isModuleDarkAndActive(r + 1, c - 1),
+        bottomRight: isModuleDarkAndActive(r + 1, c + 1),
       };
 
       drawDotModule(ctx, x, y, moduleSize, config.dotStyle, fgStyle, neighbors);
@@ -292,6 +353,10 @@ interface ModuleNeighbors {
   bottom: boolean;
   left: boolean;
   right: boolean;
+  topLeft: boolean;
+  topRight: boolean;
+  bottomLeft: boolean;
+  bottomRight: boolean;
 }
 
 /**
@@ -309,6 +374,49 @@ function drawDotModule(
   ctx.fillStyle = fillStyle;
 
   switch (style) {
+    case "liquid-blob": {
+      // Liquid Blob / Organic Flow / Circuit Metaballs (as in uploaded screenshot)
+      const cx = x + size / 2;
+      const cy = y + size / 2;
+      const r = size * 0.44;
+
+      // Base central round module
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Fluid orthogonal connector bridges
+      const bridgeW = size * 0.88;
+      const halfB = bridgeW / 2;
+
+      if (neighbors.top) {
+        ctx.fillRect(cx - halfB, y, bridgeW, size * 0.5 + 0.5);
+      }
+      if (neighbors.bottom) {
+        ctx.fillRect(cx - halfB, cy - 0.5, bridgeW, size * 0.5 + 0.5);
+      }
+      if (neighbors.left) {
+        ctx.fillRect(x, cy - halfB, size * 0.5 + 0.5, bridgeW);
+      }
+      if (neighbors.right) {
+        ctx.fillRect(cx - 0.5, cy - halfB, size * 0.5 + 0.5, bridgeW);
+      }
+
+      // Smooth diagonal corner fillings when adjacent paths turn
+      if (neighbors.top && neighbors.right && neighbors.topRight) {
+        ctx.fillRect(cx, y, size * 0.5, size * 0.5);
+      }
+      if (neighbors.bottom && neighbors.right && neighbors.bottomRight) {
+        ctx.fillRect(cx, cy, size * 0.5, size * 0.5);
+      }
+      if (neighbors.bottom && neighbors.left && neighbors.bottomLeft) {
+        ctx.fillRect(x, cy, size * 0.5, size * 0.5);
+      }
+      if (neighbors.top && neighbors.left && neighbors.topLeft) {
+        ctx.fillRect(x, y, size * 0.5, size * 0.5);
+      }
+      break;
+    }
     case "squircle": {
       // Modern Apple-style Squircle (96% area coverage, ultra-high scannability)
       const r = size * 0.2;

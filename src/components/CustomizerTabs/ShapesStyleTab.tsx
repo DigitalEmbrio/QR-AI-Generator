@@ -43,6 +43,14 @@ const DOT_STYLES: DotStyleItem[] = [
     scannabilityScore: 99,
   },
   {
+    id: "liquid-blob",
+    label: "Liquid Blob / Organic Flow",
+    subLabel: "Aliran cairan organik tersambung",
+    category: "easy-scan",
+    scannability: "98% Mudah Scan",
+    scannabilityScore: 98,
+  },
+  {
     id: "connected",
     label: "Connected Smooth",
     subLabel: "Blok menyatu tanpa celah",
@@ -181,6 +189,14 @@ const DotPreviewShape: React.FC<{ styleId: DotStyle; isSelected: boolean }> = ({
       return <div className={`w-3.5 h-3.5 rounded-sm ${colorClass}`} />;
     case "subtle-rounded":
       return <div className={`w-3.5 h-3.5 rounded-[2px] ${colorClass}`} />;
+    case "liquid-blob":
+      return (
+        <div className="flex items-center justify-center">
+          <div className={`w-3.5 h-3.5 rounded-full ring-1 ring-indigo-400/40 relative ${colorClass}`}>
+            <div className={`absolute -right-1 top-1 w-2 h-1.5 rounded-r-full ${colorClass}`} />
+          </div>
+        </div>
+      );
     case "connected":
       return (
         <div className="flex gap-[1px]">

@@ -80,6 +80,7 @@ export function evaluateScannability(config: QRConfig): ScannabilityResult {
     case "squares":
     case "squircle":
     case "subtle-rounded":
+    case "liquid-blob":
     case "connected":
     case "bold-dots":
       score += 35;

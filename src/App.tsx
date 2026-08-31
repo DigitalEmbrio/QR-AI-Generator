@@ -54,6 +54,11 @@ const DEFAULT_CONFIG: QRConfig = {
     eyeFrameColor: "#0f172a",
     eyeDotColor: "#4f46e5",
   },
+  effects: {
+    glow: false,
+    texture: false,
+    confetti: false,
+  },
   logo: {
     enabled: true,
     type: "preset",
@@ -393,7 +398,7 @@ export default function App() {
                   { id: "designs", label: "Designs", icon: LayoutTemplate },
                   { id: "logo", label: "Logo", icon: ImageIcon },
                   { id: "style", label: "Style", icon: Grid },
-                  { id: "colors", label: "Colors", icon: Palette },
+                  { id: "colors", label: "Warna", icon: Palette },
                   { id: "advanced", label: "Advanced", icon: Layers },
                 ].map((t) => {
                   const Icon = t.icon;

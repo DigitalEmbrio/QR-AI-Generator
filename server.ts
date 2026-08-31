@@ -65,7 +65,7 @@ User Preference/Prompt: ${prompt || "Modern aesthetic artistic design"}`;
             eyeColor: { type: Type.STRING, description: "Corner eye hex color code" },
             dotStyle: {
               type: Type.STRING,
-              description: "One of: 'squares', 'squircle', 'subtle-rounded', 'connected', 'bold-dots', 'dots', 'rounded', 'extra-rounded', 'mosaic', 'classy', 'hex-dots', 'petal', 'diamond', 'cross', 'fluid', 'star'",
+              description: "One of: 'squares', 'squircle', 'subtle-rounded', 'liquid-blob', 'connected', 'bold-dots', 'dots', 'rounded', 'extra-rounded', 'mosaic', 'classy', 'hex-dots', 'petal', 'diamond', 'cross', 'fluid', 'star'",
             },
             cornerFrameStyle: {
               type: Type.STRING,

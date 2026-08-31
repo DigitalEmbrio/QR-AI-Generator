@@ -72,6 +72,7 @@ export type DotStyle =
   | "squares"
   | "squircle"
   | "subtle-rounded"
+  | "liquid-blob"
   | "connected"
   | "bold-dots"
   | "dots"
@@ -150,6 +151,12 @@ export interface AIArtConfig {
   isGenerating?: boolean;
 }
 
+export interface SpecialEffectsConfig {
+  glow: boolean;
+  texture: boolean;
+  confetti: boolean;
+}
+
 export interface QRConfig {
   id: string;
   title: string;
@@ -159,6 +166,7 @@ export interface QRConfig {
   cornerFrameStyle: CornerFrameStyle;
   cornerDotStyle: CornerDotStyle;
   color: ColorConfig;
+  effects?: SpecialEffectsConfig;
   logo: LogoConfig;
   frame: FrameConfig;
   aiArt: AIArtConfig;
