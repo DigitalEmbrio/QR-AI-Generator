@@ -70,11 +70,19 @@ export type QRDataMap = {
 
 export type DotStyle =
   | "squares"
+  | "squircle"
+  | "subtle-rounded"
+  | "connected"
+  | "bold-dots"
   | "dots"
   | "rounded"
   | "extra-rounded"
+  | "mosaic"
   | "classy"
+  | "hex-dots"
+  | "petal"
   | "diamond"
+  | "cross"
   | "fluid"
   | "star";
 

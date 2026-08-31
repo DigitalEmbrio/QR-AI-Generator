@@ -221,6 +221,22 @@ export async function renderQRCodeCanvas({
     logoMaxCol = center + half;
   }
 
+  // Helper to check active dark module
+  const isModuleDarkAndActive = (r: number, c: number): boolean => {
+    if (r < 0 || r >= moduleCount || c < 0 || c >= moduleCount) return false;
+    if (isFinderPattern(r, c)) return false;
+    if (
+      config.logo.enabled &&
+      r >= logoMinRow &&
+      r <= logoMaxRow &&
+      c >= logoMinCol &&
+      c <= logoMaxCol
+    ) {
+      return false;
+    }
+    return qrRaw.modules.get(r, c) === 1;
+  };
+
   for (let r = 0; r < moduleCount; r++) {
     for (let c = 0; c < moduleCount; c++) {
       // Is matrix module active (1)?
@@ -243,7 +259,14 @@ export async function renderQRCodeCanvas({
       const x = offsetX + c * moduleSize;
       const y = offsetY + r * moduleSize;
 
-      drawDotModule(ctx, x, y, moduleSize, config.dotStyle, fgStyle);
+      const neighbors = {
+        top: isModuleDarkAndActive(r - 1, c),
+        bottom: isModuleDarkAndActive(r + 1, c),
+        left: isModuleDarkAndActive(r, c - 1),
+        right: isModuleDarkAndActive(r, c + 1),
+      };
+
+      drawDotModule(ctx, x, y, moduleSize, config.dotStyle, fgStyle, neighbors);
     }
   }
 
@@ -264,6 +287,13 @@ export async function renderQRCodeCanvas({
   }
 }
 
+interface ModuleNeighbors {
+  top: boolean;
+  bottom: boolean;
+  left: boolean;
+  right: boolean;
+}
+
 /**
  * Draw single dot module based on selected DotStyle
  */
@@ -273,47 +303,129 @@ function drawDotModule(
   y: number,
   size: number,
   style: QRConfig["dotStyle"],
-  fillStyle: string | CanvasGradient
+  fillStyle: string | CanvasGradient,
+  neighbors: ModuleNeighbors
 ) {
   ctx.fillStyle = fillStyle;
 
   switch (style) {
+    case "squircle": {
+      // Modern Apple-style Squircle (96% area coverage, ultra-high scannability)
+      const r = size * 0.2;
+      drawRoundRect(ctx, x + size * 0.02, y + size * 0.02, size * 0.96, size * 0.96, r);
+      ctx.fill();
+      break;
+    }
+    case "subtle-rounded": {
+      // Crisp subtle corners (98% area coverage, maximum camera readability)
+      const r = size * 0.12;
+      drawRoundRect(ctx, x + size * 0.01, y + size * 0.01, size * 0.98, size * 0.98, r);
+      ctx.fill();
+      break;
+    }
+    case "connected": {
+      // Neighbor-aware connected modules (continuous flow, zero gap threshold errors)
+      const r = size * 0.42;
+      const tl = !neighbors.top && !neighbors.left ? r : 0;
+      const tr = !neighbors.top && !neighbors.right ? r : 0;
+      const br = !neighbors.bottom && !neighbors.right ? r : 0;
+      const bl = !neighbors.bottom && !neighbors.left ? r : 0;
+      drawCustomRoundRect(ctx, x, y, size, size, tl, tr, br, bl);
+      ctx.fill();
+      break;
+    }
+    case "bold-dots": {
+      // Bold large circle (96% diameter coverage, highly visible to camera sensors)
+      ctx.beginPath();
+      ctx.arc(x + size / 2, y + size / 2, size * 0.48, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
     case "dots": {
+      // Classic regular circle
       ctx.beginPath();
       ctx.arc(x + size / 2, y + size / 2, size * 0.42, 0, Math.PI * 2);
       ctx.fill();
       break;
     }
     case "rounded": {
-      const r = size * 0.3;
-      drawRoundRect(ctx, x + size * 0.05, y + size * 0.05, size * 0.9, size * 0.9, r);
+      const r = size * 0.28;
+      drawRoundRect(ctx, x + size * 0.04, y + size * 0.04, size * 0.92, size * 0.92, r);
       ctx.fill();
       break;
     }
     case "extra-rounded": {
-      const r = size * 0.45;
-      drawRoundRect(ctx, x + size * 0.05, y + size * 0.05, size * 0.9, size * 0.9, r);
+      const r = size * 0.44;
+      drawRoundRect(ctx, x + size * 0.04, y + size * 0.04, size * 0.92, size * 0.92, r);
+      ctx.fill();
+      break;
+    }
+    case "mosaic": {
+      // Alternating geometric mosaic tiles
+      const col = Math.round(x / size);
+      const row = Math.round(y / size);
+      const alt = (col + row) % 2 === 0;
+      const r = size * 0.38;
+      if (alt) {
+        drawCustomRoundRect(ctx, x + size * 0.03, y + size * 0.03, size * 0.94, size * 0.94, r, 0, r, 0);
+      } else {
+        drawCustomRoundRect(ctx, x + size * 0.03, y + size * 0.03, size * 0.94, size * 0.94, 0, r, 0, r);
+      }
+      ctx.fill();
+      break;
+    }
+    case "classy": {
+      drawCustomRoundRect(
+        ctx,
+        x + size * 0.03,
+        y + size * 0.03,
+        size * 0.94,
+        size * 0.94,
+        0,
+        size * 0.42,
+        0,
+        size * 0.42
+      );
+      ctx.fill();
+      break;
+    }
+    case "hex-dots": {
+      drawHexagon(ctx, x + size / 2, y + size / 2, size * 0.48);
+      ctx.fill();
+      break;
+    }
+    case "petal": {
+      drawCustomRoundRect(
+        ctx,
+        x + size * 0.03,
+        y + size * 0.03,
+        size * 0.94,
+        size * 0.94,
+        size * 0.46,
+        0,
+        size * 0.46,
+        0
+      );
       ctx.fill();
       break;
     }
     case "diamond": {
       ctx.beginPath();
-      ctx.moveTo(x + size / 2, y + size * 0.05);
-      ctx.lineTo(x + size * 0.95, y + size / 2);
-      ctx.lineTo(x + size / 2, y + size * 0.95);
-      ctx.lineTo(x + size * 0.05, y + size / 2);
+      ctx.moveTo(x + size / 2, y + size * 0.04);
+      ctx.lineTo(x + size * 0.96, y + size / 2);
+      ctx.lineTo(x + size / 2, y + size * 0.96);
+      ctx.lineTo(x + size * 0.04, y + size / 2);
       ctx.closePath();
       ctx.fill();
       break;
     }
-    case "classy": {
-      ctx.beginPath();
-      ctx.moveTo(x + size * 0.05, y + size * 0.05);
-      ctx.lineTo(x + size * 0.95, y + size * 0.05);
-      ctx.arcTo(x + size * 0.95, y + size * 0.95, x + size * 0.05, y + size * 0.95, size * 0.4);
-      ctx.lineTo(x + size * 0.05, y + size * 0.95);
-      ctx.closePath();
-      ctx.fill();
+    case "cross": {
+      const pad = size * 0.04;
+      const w = size - pad * 2;
+      const arm = w * 0.42;
+      const offset = (w - arm) / 2;
+      ctx.fillRect(x + pad + offset, y + pad, arm, w);
+      ctx.fillRect(x + pad, y + pad + offset, w, arm);
       break;
     }
     case "fluid": {
@@ -323,7 +435,7 @@ function drawDotModule(
       break;
     }
     case "star": {
-      drawStar(ctx, x + size / 2, y + size / 2, 4, size * 0.48, size * 0.2);
+      drawStar(ctx, x + size / 2, y + size / 2, 4, size * 0.48, size * 0.22);
       ctx.fill();
       break;
     }
@@ -549,6 +661,53 @@ function drawRoundRect(
   ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/**
+ * Utility: Draw Custom Rounded Rectangle with distinct corner radii
+ */
+function drawCustomRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  tl: number,
+  tr: number,
+  br: number,
+  bl: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + w - tr, y);
+  if (tr > 0) ctx.arcTo(x + w, y, x + w, y + tr, tr);
+  ctx.lineTo(x + w, y + h - br);
+  if (br > 0) ctx.arcTo(x + w, y + h, x + w - br, y + h, br);
+  ctx.lineTo(x + bl, y + h);
+  if (bl > 0) ctx.arcTo(x, y + h, x, y + h - bl, bl);
+  ctx.lineTo(x, y + tl);
+  if (tl > 0) ctx.arcTo(x, y, x + tl, y, tl);
+  ctx.closePath();
+}
+
+/**
+ * Utility: Draw Regular Hexagon
+ */
+function drawHexagon(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number
+) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 6;
+    const x = cx + radius * Math.cos(angle);
+    const y = cy + radius * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
   ctx.closePath();
 }
 
